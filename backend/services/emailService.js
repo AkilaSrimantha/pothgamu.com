@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 async function getTransporter() {
   const host = process.env.EMAIL_HOST;
   const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
+  const pass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : '';
 
   if (host && user && pass) {
     return nodemailer.createTransport({
