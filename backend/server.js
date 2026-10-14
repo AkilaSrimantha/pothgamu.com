@@ -42,6 +42,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const authRoutes = require('./routes/authRoutes');
+const paypalRoutes = require('./routes/paypalRoutes');
 const LocalDB = require('./localDb');
 
 // Fallback router for LocalDB if MongoDB is not running
@@ -246,8 +247,9 @@ fallbackRouter.get('/analytics/dashboard', (req, res) => {
   });
 });
 
-// Auth Routes
+// Auth & PayPal Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/paypal', paypalRoutes);
 
 // Route switcher middleware
 app.use('/api', (req, res, next) => {
