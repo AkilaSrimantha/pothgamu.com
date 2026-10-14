@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { sampleBooks, sampleCategories } from './fallbackData';
 
 // Design Tokens for PothGamu.lk
 // Palette drawn from Sri Lankan reading culture: aged ola-leaf paper,
@@ -51,11 +52,11 @@ export default function PothGamuHomepage({
   wishlist,
   setWishlist
 }) {
-  const [books, setBooks] = useState([]);
-  const [categories, setCategories] = useState(['All', 'Past Papers', 'Medical', 'Novel', 'Children', 'Academic']);
+  const [books, setBooks] = useState(sampleBooks);
+  const [categories, setCategories] = useState(sampleCategories);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -83,7 +84,6 @@ export default function PothGamuHomepage({
   }, [selectedCategory]);
 
   const fetchBooks = async () => {
-    setLoading(true);
     try {
       let url = `${API_BASE}/books`;
       if (selectedCategory !== 'All') {
@@ -91,13 +91,23 @@ export default function PothGamuHomepage({
       }
       const res = await fetch(url);
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.data && data.data.length > 0) {
         setBooks(data.data);
+      } else {
+        applyFallbackBooks();
       }
     } catch (err) {
-      console.warn("Backend fetch failed, using fallback:", err);
+      applyFallbackBooks();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const applyFallbackBooks = () => {
+    if (selectedCategory === 'All') {
+      setBooks(sampleBooks);
+    } else {
+      setBooks(sampleBooks.filter(b => b.category === selectedCategory));
     }
   };
 
@@ -105,12 +115,14 @@ export default function PothGamuHomepage({
     try {
       const res = await fetch(`${API_BASE}/categories`);
       const data = await res.json();
-      if (data.success && data.data) {
+      if (data.success && data.data && data.data.length > 0) {
         const catNames = ['All', ...data.data.map(c => c.name)];
         setCategories(catNames);
+      } else {
+        setCategories(sampleCategories);
       }
     } catch (err) {
-      console.warn("Categories fetch error:", err);
+      setCategories(sampleCategories);
     }
   };
 
