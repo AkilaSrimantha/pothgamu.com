@@ -1,0 +1,104 @@
+[
+  {
+    "orderId": "ORD-8918",
+    "customer": {
+      "name": "Ruwan Fernando",
+      "email": "ruwan.fernando@gmail.com",
+      "phone": "+94 77 123 4567",
+      "address": "No. 45, Temple Road",
+      "city": "Galle"
+    },
+    "items": [
+      {
+        "title": "Amba Yahaluwo",
+        "author": "T.B. Ilangaratne",
+        "price": 550,
+        "quantity": 1
+      }
+    ],
+    "totalAmount": 550,
+    "status": "Cancelled",
+    "paymentMethod": "Cash on Delivery",
+    "_id": "6800000000000000000000001",
+    "createdAt": "2026-10-14T13:20:29.902Z",
+    "updatedAt": "2026-10-14T13:20:29.902Z"
+  },
+  {
+    "orderId": "ORD-8919",
+    "customer": {
+      "name": "Kavindu Perera",
+      "email": "kavindu.p@horizoncampus.edu.lk",
+      "phone": "+94 71 892 3412",
+      "address": "12/A, Kandy Road",
+      "city": "Malabe"
+    },
+    "items": [
+      {
+        "title": "Clinical Medicine Essentials",
+        "author": "Dr. Kumar & Clark",
+        "price": 4500,
+        "quantity": 1
+      }
+    ],
+    "totalAmount": 4500,
+    "status": "Pending",
+    "paymentMethod": "Bank Transfer",
+    "_id": "6800000000000000000000002",
+    "createdAt": "2026-10-14T09:20:29.902Z",
+    "updatedAt": "2026-10-14T13:20:29.902Z"
+  },
+  {
+    "orderId": "ORD-8920",
+    "customer": {
+      "name": "Sanduni Jayawardena",
+      "email": "sanduni.j@yahoo.com",
+      "phone": "+94 76 543 2109",
+      "address": "78, Flower Road",
+      "city": "Colombo 07"
+    },
+    "items": [
+      {
+        "title": "Madol Doova",
+        "author": "Martin Wickramasinghe",
+        "price": 650,
+        "quantity": 1
+      },
+      {
+        "title": "Gamperaliya",
+        "author": "Martin Wickramasinghe",
+        "price": 850,
+        "quantity": 1
+      }
+    ],
+    "totalAmount": 1500,
+    "status": "Delivered",
+    "paymentMethod": "Credit/Debit Card",
+    "_id": "6800000000000000000000003",
+    "createdAt": "2026-10-14T05:20:29.902Z",
+    "updatedAt": "2026-10-14T13:20:29.902Z"
+  },
+  {
+    "orderId": "ORD-8921",
+    "customer": {
+      "name": "Nimal Wickramasinghe",
+      "email": "nimal.w@gmail.com",
+      "phone": "+94 72 345 6789",
+      "address": "Station Road",
+      "city": "Kurunegala"
+    },
+    "items": [
+      {
+        "title": "A/L Combined Maths Past Papers (15 Years)",
+        "author": "Department of Examinations",
+        "price": 1200,
+        "quantity": 1
+      }
+    ],
+    "totalAmount": 1200,
+    "status": "Shipped",
+    "paymentMethod": "Cash on Delivery",
+    "_id": "6800000000000000000000004",
+    "createdAt": "2026-10-14T01:20:29.902Z",
+    "updatedAt": "2026-10-14T13:20:29.902Z"
+  }
+]

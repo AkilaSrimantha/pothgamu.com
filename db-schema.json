@@ -1,0 +1,70 @@
+{
+  "$jsonSchema": {
+    "bsonType": "object",
+    "title": "Books Validation Schema",
+    "required": [
+      "isbn",
+      "title",
+      "author",
+      "price",
+      "quantityInStock"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "isbn": {
+        "bsonType": "string",
+        "description": "Unique 10-digit / 13-digit ISBN, required"
+      },
+      "title": {
+        "bsonType": "string",
+        "description": "Book title, required"
+      },
+      "author": {
+        "bsonType": "string",
+        "description": "Author or publisher name, required"
+      },
+      "category": {
+        "bsonType": "string",
+        "enum": [
+          "Past Papers",
+          "Medical",
+          "Novel",
+          "Children",
+          "Academic",
+          "Historical & Classic",
+          "Educational & School"
+        ],
+        "description": "Book category used for catalog filtering"
+      },
+      "price": {
+        "bsonType": "double",
+        "minimum": 0,
+        "description": "Price in LKR, required"
+      },
+      "quantityInStock": {
+        "bsonType": "int",
+        "minimum": 0,
+        "description": "Current available inventory units, required"
+      },
+      "description": {
+        "bsonType": "string",
+        "description": "Brief synopsis of the book"
+      },
+      "coverImage": {
+        "bsonType": "string",
+        "description": "URL to the book cover artwork"
+      },
+      "publishedYear": {
+        "bsonType": "int",
+        "description": "Publication year"
+      },
+      "publisher": {
+        "bsonType": "string",
+        "description": "Publisher or press name"
+      }
+    }
+  }
+}
+

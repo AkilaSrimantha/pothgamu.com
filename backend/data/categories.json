@@ -1,0 +1,51 @@
+[
+  {
+    "name": "Novel",
+    "description": "Novels & Fiction from Sri Lankan and global authors",
+    "displayOrder": 1,
+    "_id": "6700000000000000000000001",
+    "createdAt": "2026-10-14T13:20:29.901Z"
+  },
+  {
+    "name": "Children",
+    "description": "Children stories and classic illustrated folk tales",
+    "displayOrder": 2,
+    "_id": "6700000000000000000000002",
+    "createdAt": "2026-10-14T13:20:29.901Z"
+  },
+  {
+    "name": "Past Papers",
+    "description": "G.C.E. O/L and A/L past paper collections & model papers",
+    "displayOrder": 3,
+    "_id": "6700000000000000000000003",
+    "createdAt": "2026-10-14T13:20:29.901Z"
+  },
+  {
+    "name": "Medical",
+    "description": "Clinical medicine textbooks, anatomy & pharmacy guides",
+    "displayOrder": 4,
+    "_id": "6700000000000000000000004",
+    "createdAt": "2026-10-14T13:20:29.901Z"
+  },
+  {
+    "name": "Academic",
+    "description": "University level higher education, science, IT & engineering",
+    "displayOrder": 5,
+    "_id": "6700000000000000000000005",
+    "createdAt": "2026-10-14T13:20:29.901Z"
+  },
+  {
+    "name": "Historical & Classic",
+    "description": "Historical manuscripts, heritage and classical chronicles",
+    "displayOrder": 6,
+    "_id": "6700000000000000000000006",
+    "createdAt": "2026-10-14T13:20:29.901Z"
+  },
+  {
+    "name": "Educational & School",
+    "description": "Grade 1-13 school syllabus workbooks and reference guides",
+    "displayOrder": 7,
+    "_id": "6700000000000000000000007",
+    "createdAt": "2026-10-14T13:20:29.901Z"
+  }
+]
