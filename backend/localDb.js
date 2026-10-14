@@ -102,6 +102,23 @@ const LocalDB = {
       writeData(booksFile, items);
       return book;
     },
+    addReview: (id, reviewData) => {
+      const items = readData(booksFile);
+      const index = items.findIndex(b => b._id === id);
+      if (index === -1) return null;
+      if (!items[index].reviews) items[index].reviews = [];
+      const review = {
+        _id: 'rev_' + Math.random().toString(16).slice(2, 10),
+        ...reviewData,
+        createdAt: new Date().toISOString()
+      };
+      items[index].reviews.unshift(review);
+      items[index].totalReviews = items[index].reviews.length;
+      const sum = items[index].reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
+      items[index].averageRating = Number((sum / items[index].totalReviews).toFixed(1));
+      writeData(booksFile, items);
+      return items[index];
+    },
     count: (filter = {}) => {
       return LocalDB.books.find(filter).length;
     }

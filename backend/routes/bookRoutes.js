@@ -124,6 +124,102 @@ router.patch('/:id/restock', async (req, res) => {
   }
 });
 
+// POST add a review to a book
+router.post('/:id/reviews', async (req, res) => {
+  try {
+    const { userName, rating, comment, verifiedPurchase, orderId } = req.body;
+
+    if (!rating || Number(rating) < 1 || Number(rating) > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5 stars' });
+    }
+
+    if (!comment || !comment.trim()) {
+      return res.status(400).json({ success: false, message: 'Review comment cannot be empty' });
+    }
+
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ success: false, message: 'Book not found' });
+    }
+
+    const newReview = {
+      userName: userName ? userName.trim() : 'Anonymous Reader',
+      rating: Number(rating),
+      comment: comment.trim(),
+      verifiedPurchase: verifiedPurchase !== undefined ? verifiedPurchase : true,
+      orderId: orderId || '',
+      createdAt: new Date()
+    };
+
+    if (!book.reviews) {
+      book.reviews = [];
+    }
+
+    book.reviews.unshift(newReview);
+    book.totalReviews = book.reviews.length;
+    const sumRatings = book.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
+    book.averageRating = Number((sumRatings / book.totalReviews).toFixed(1));
+
+    await book.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Review submitted successfully! Thank you for your feedback.',
+      data: book
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET reviews for a book
+router.get('/:id/reviews', async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ success: false, message: 'Book not found' });
+    }
+    res.json({
+      success: true,
+      totalReviews: book.reviews?.length || 0,
+      averageRating: book.averageRating || 5.0,
+      data: book.reviews || []
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET all reviews summary for admin
+router.get('/all-reviews/summary', async (req, res) => {
+  try {
+    const books = await Book.find({ 'reviews.0': { $exists: true } });
+    const allReviews = [];
+    books.forEach(b => {
+      b.reviews.forEach(r => {
+        allReviews.push({
+          bookId: b._id,
+          bookTitle: b.title,
+          bookCover: b.coverImage,
+          category: b.category,
+          reviewId: r._id,
+          userName: r.userName,
+          rating: r.rating,
+          comment: r.comment,
+          verifiedPurchase: r.verifiedPurchase,
+          orderId: r.orderId,
+          createdAt: r.createdAt
+        });
+      });
+    });
+
+    allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json({ success: true, count: allReviews.length, data: allReviews });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // DELETE book
 router.delete('/:id', async (req, res) => {
   try {

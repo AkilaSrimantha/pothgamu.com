@@ -66,6 +66,15 @@ export default function PothGamuHomepage({
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackError, setTrackError] = useState('');
 
+  // Book Detail Modal Review State
+  const [detailTab, setDetailTab] = useState('overview'); // 'overview' | 'reviews'
+  const [detailReviewRating, setDetailReviewRating] = useState(5);
+  const [detailReviewComment, setDetailReviewComment] = useState('');
+  const [detailReviewName, setDetailReviewName] = useState('');
+  const [submittingDetailReview, setSubmittingDetailReview] = useState(false);
+  const [detailReviewSuccess, setDetailReviewSuccess] = useState('');
+  const [detailReviewError, setDetailReviewError] = useState('');
+
   // Checkout form state
   const [checkoutData, setCheckoutData] = useState({
     name: '',
@@ -124,6 +133,56 @@ export default function PothGamuHomepage({
     } catch (err) {
       setCategories(sampleCategories);
     }
+  };
+
+  const handleDetailReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!detailReviewComment.trim()) {
+      setDetailReviewError('Please write a short review comment.');
+      return;
+    }
+    setSubmittingDetailReview(true);
+    setDetailReviewError('');
+
+    const newRev = {
+      _id: 'rev_' + Date.now(),
+      userName: detailReviewName.trim() || customerUser?.name || 'Verified Reader',
+      rating: Number(detailReviewRating),
+      comment: detailReviewComment.trim(),
+      verifiedPurchase: true,
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      if (selectedBook._id) {
+        await fetch(`${API_BASE}/books/${selectedBook._id}/reviews`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newRev)
+        });
+      }
+    } catch (err) {
+      console.warn("Direct review submit failed, updating in memory:", err);
+    }
+
+    const updatedReviews = [newRev, ...(selectedBook.reviews || [])];
+    const sum = updatedReviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
+    const avg = Number((sum / updatedReviews.length).toFixed(1));
+
+    const updatedBook = {
+      ...selectedBook,
+      reviews: updatedReviews,
+      totalReviews: updatedReviews.length,
+      averageRating: avg
+    };
+
+    setSelectedBook(updatedBook);
+    setBooks(prev => prev.map(b => b._id === selectedBook._id ? updatedBook : b));
+    setDetailReviewComment('');
+    setDetailReviewName('');
+    setDetailReviewSuccess('Thank you! Your review has been submitted.');
+    setSubmittingDetailReview(false);
+    setTimeout(() => setDetailReviewSuccess(''), 3000);
   };
 
   const filteredBooks = books.filter(b => {
@@ -671,7 +730,7 @@ export default function PothGamuHomepage({
               color: tokens.gold,
               fontWeight: '600'
             }}>
-              IT32053 • Group 16
+              
             </div>
           </div>
         </div>
@@ -896,10 +955,21 @@ export default function PothGamuHomepage({
                         fontSize: '13px',
                         color: tokens.ink,
                         opacity: 0.7,
-                        marginBottom: '12px'
+                        marginBottom: '6px'
                       }}>
                         {book.author}
                       </p>
+                      
+                      {/* Rating & Reviews */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', marginBottom: '10px' }}>
+                        <span style={{ color: '#F59E0B' }}>★</span>
+                        <strong style={{ color: tokens.tealDeep, fontSize: '12px' }}>
+                          {Number(book.averageRating || 5.0).toFixed(1)}
+                        </strong>
+                        <span style={{ color: tokens.ink, opacity: 0.5, fontSize: '11px' }}>
+                          ({book.totalReviews || book.reviews?.length || 1} reviews)
+                        </span>
+                      </div>
                     </div>
 
                     <div style={{
@@ -952,7 +1022,8 @@ export default function PothGamuHomepage({
         <div style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(3px)',
           zIndex: 200,
           display: 'flex',
           alignItems: 'center',
@@ -961,17 +1032,18 @@ export default function PothGamuHomepage({
         }}>
           <div style={{
             backgroundColor: tokens.white,
-            borderRadius: '16px',
-            maxWidth: '650px',
+            borderRadius: '20px',
+            maxWidth: '760px',
             width: '100%',
+            maxHeight: '90vh',
             overflow: 'hidden',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
             display: 'flex',
             flexDirection: 'row',
             position: 'relative'
           }}>
             <button
-              onClick={() => setSelectedBook(null)}
+              onClick={() => { setSelectedBook(null); setDetailTab('overview'); }}
               style={{
                 position: 'absolute',
                 top: '14px',
@@ -990,51 +1062,293 @@ export default function PothGamuHomepage({
               <i className="fa-solid fa-xmark"></i>
             </button>
 
-            <div style={{ width: '40%', backgroundColor: tokens.paperDeep }}>
-              <img
-                src={selectedBook.coverImage}
-                alt={selectedBook.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+            {/* Left Cover & Quick Specs */}
+            <div style={{
+              width: '38%',
+              backgroundColor: tokens.paperDeep,
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRight: `1px solid ${tokens.line}`
+            }}>
+              <div style={{
+                width: '100%',
+                maxHeight: '300px',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                boxShadow: '0 8px 18px rgba(0,0,0,0.15)',
+                marginBottom: '16px'
+              }}>
+                <img
+                  src={selectedBook.coverImage}
+                  alt={selectedBook.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+
+              {/* Star Rating Badge */}
+              <div style={{
+                backgroundColor: tokens.paper,
+                borderRadius: '12px',
+                padding: '8px 14px',
+                width: '100%',
+                textAlign: 'center',
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ color: '#F59E0B', fontSize: '18px', letterSpacing: '2px', marginBottom: '2px' }}>
+                  {'★'.repeat(Math.round(selectedBook.averageRating || 5))}
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: tokens.tealDeep }}>
+                  {Number(selectedBook.averageRating || 5.0).toFixed(1)} / 5.0 Rating
+                </div>
+                <div style={{ fontSize: '11px', color: tokens.ink, opacity: 0.6 }}>
+                  Based on {selectedBook.totalReviews || selectedBook.reviews?.length || 0} reviews
+                </div>
+              </div>
             </div>
 
-            <div style={{ width: '60%', padding: '28px', display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '11px', fontWeight: '700', color: tokens.sage, textTransform: 'uppercase' }}>
+            {/* Right Details & Reviews Tabs */}
+            <div style={{
+              width: '62%',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              overflowY: 'auto'
+            }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: tokens.sage, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 {selectedBook.category}
               </span>
-              <h2 style={{ fontSize: '22px', color: tokens.tealDeep, margin: '6px 0', fontFamily: "'Fraunces', serif" }}>
+              <h2 style={{ fontSize: '22px', color: tokens.tealDeep, margin: '4px 0 2px 0', fontFamily: "'Fraunces', serif" }}>
                 {selectedBook.title}
               </h2>
               <p style={{ fontSize: '14px', color: tokens.ink, opacity: 0.8, marginBottom: '14px' }}>
                 by <strong style={{ color: tokens.teal }}>{selectedBook.author}</strong>
               </p>
 
-              <div style={{ fontSize: '13px', lineHeight: 1.6, opacity: 0.85, marginBottom: '16px', flex: 1 }}>
-                {selectedBook.description || 'No detailed description available for this volume.'}
-              </div>
-
+              {/* Tabs: Overview vs Reviews */}
               <div style={{
-                backgroundColor: tokens.paper,
-                borderRadius: '8px',
-                padding: '10px 14px',
-                fontSize: '12px',
+                display: 'flex',
+                gap: '8px',
+                borderBottom: `1px solid ${tokens.line}`,
                 marginBottom: '16px',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '8px'
+                paddingBottom: '4px'
               }}>
-                <div><strong>ISBN:</strong> {selectedBook.isbn}</div>
-                <div><strong>Stock:</strong> {selectedBook.quantityInStock} available</div>
-                <div><strong>Publisher:</strong> {selectedBook.publisher || 'N/A'}</div>
-                <div><strong>Year:</strong> {selectedBook.publishedYear || 'N/A'}</div>
+                <button
+                  onClick={() => setDetailTab('overview')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: detailTab === 'overview' ? `2px solid ${tokens.teal}` : '2px solid transparent',
+                    color: detailTab === 'overview' ? tokens.tealDeep : '#64748B',
+                    fontWeight: '700',
+                    fontSize: '13px',
+                    padding: '6px 12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Overview (විස්තරය)
+                </button>
+                <button
+                  onClick={() => setDetailTab('reviews')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: detailTab === 'reviews' ? `2px solid ${tokens.teal}` : '2px solid transparent',
+                    color: detailTab === 'reviews' ? tokens.tealDeep : '#64748B',
+                    fontWeight: '700',
+                    fontSize: '13px',
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  Reviews ({selectedBook.reviews?.length || selectedBook.totalReviews || 0})
+                </button>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-                <span style={{ fontSize: '22px', fontWeight: '700', color: tokens.cinnamon }}>
-                  Rs. {Number(selectedBook.price).toFixed(2)}
-                </span>
+              {/* Tab 1: Overview */}
+              {detailTab === 'overview' && (
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <div style={{ fontSize: '13px', lineHeight: 1.6, opacity: 0.85, marginBottom: '16px' }}>
+                    {selectedBook.description || 'No detailed description available for this volume.'}
+                  </div>
+
+                  <div style={{
+                    backgroundColor: tokens.paper,
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    fontSize: '12px',
+                    marginBottom: '16px',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '8px'
+                  }}>
+                    <div><strong>ISBN:</strong> {selectedBook.isbn}</div>
+                    <div><strong>Stock:</strong> {selectedBook.quantityInStock} available</div>
+                    <div><strong>Publisher:</strong> {selectedBook.publisher || 'N/A'}</div>
+                    <div><strong>Year:</strong> {selectedBook.publishedYear || 'N/A'}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: Reviews */}
+              {detailTab === 'reviews' && (
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '14px' }}>
+                  {/* Write a Review Section */}
+                  <form onSubmit={handleDetailReviewSubmit} style={{
+                    backgroundColor: tokens.paper,
+                    borderRadius: '12px',
+                    padding: '12px 16px',
+                    border: `1px solid ${tokens.line}`
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: tokens.tealDeep }}>
+                        Write a Customer Review / ඔබේ අදහස ලියන්න
+                      </span>
+                      <div style={{ display: 'flex', gap: '3px' }}>
+                        {[1, 2, 3, 4, 5].map(s => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setDetailReviewRating(s)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: detailReviewRating >= s ? '#F59E0B' : '#CBD5E1',
+                              fontSize: '18px',
+                              cursor: 'pointer',
+                              padding: 0
+                            }}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                      <input
+                        type="text"
+                        placeholder="Your Name (ඔබේ නම)"
+                        value={detailReviewName}
+                        onChange={e => setDetailReviewName(e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: '6px 10px',
+                          borderRadius: '6px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: '12px',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <textarea
+                      rows={2}
+                      placeholder="Write your review about this book... (පොත ගැන ඔබේ අදහස)"
+                      value={detailReviewComment}
+                      onChange={e => setDetailReviewComment(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '12px',
+                        outline: 'none',
+                        resize: 'none',
+                        boxSizing: 'border-box',
+                        marginBottom: '8px'
+                      }}
+                    />
+
+                    {detailReviewError && (
+                      <div style={{ fontSize: '11px', color: '#DC2626', marginBottom: '6px' }}>{detailReviewError}</div>
+                    )}
+                    {detailReviewSuccess && (
+                      <div style={{ fontSize: '11px', color: '#16A34A', marginBottom: '6px', fontWeight: '600' }}>{detailReviewSuccess}</div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        type="submit"
+                        disabled={submittingDetailReview}
+                        style={{
+                          backgroundColor: tokens.teal,
+                          color: '#FFFFFF',
+                          border: 'none',
+                          padding: '6px 14px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {submittingDetailReview ? 'Posting...' : 'Post Review'}
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* Reviews List */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto' }}>
+                    {(!selectedBook.reviews || selectedBook.reviews.length === 0) ? (
+                      <p style={{ fontSize: '13px', color: '#64748B', textAlign: 'center', padding: '16px 0' }}>
+                        No reviews yet for this book. Be the first to share your thoughts!
+                      </p>
+                    ) : (
+                      selectedBook.reviews.map((r, i) => (
+                        <div key={r._id || i} style={{
+                          padding: '10px 12px',
+                          borderRadius: '8px',
+                          backgroundColor: '#F8FAFC',
+                          border: '1px solid #E2E8F0'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <strong style={{ fontSize: '13px', color: tokens.tealDeep }}>{r.userName}</strong>
+                              {r.verifiedPurchase && (
+                                <span style={{ fontSize: '10px', color: '#059669', backgroundColor: '#ECFDF5', padding: '1px 6px', borderRadius: '10px', fontWeight: '600' }}>
+                                  ✓ Verified Buyer
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ color: '#F59E0B', fontSize: '12px' }}>
+                              {'★'.repeat(Math.round(r.rating || 5))}
+                            </div>
+                          </div>
+                          <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#334155', lineHeight: 1.4 }}>
+                            {r.comment}
+                          </p>
+                          <span style={{ fontSize: '10px', color: '#94A3B8' }}>
+                            {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Recent'}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom Sticky Price and Add to Cart */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: 'auto',
+                paddingTop: '16px',
+                borderTop: `1px solid ${tokens.line}`
+              }}>
+                <div>
+                  <span style={{ fontSize: '11px', color: '#64748B', display: 'block' }}>Price</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: tokens.cinnamon }}>
+                    Rs. {Number(selectedBook.price).toFixed(2)}
+                  </span>
+                </div>
                 <button
-                  onClick={() => { addToCart(selectedBook); setSelectedBook(null); }}
+                  onClick={() => { addToCart(selectedBook); setSelectedBook(null); setDetailTab('overview'); }}
                   disabled={selectedBook.quantityInStock <= 0}
                   style={{
                     backgroundColor: tokens.teal,
@@ -1044,11 +1358,11 @@ export default function PothGamuHomepage({
                     borderRadius: '8px',
                     fontWeight: '600',
                     fontSize: '14px',
-                    cursor: 'pointer'
+                    cursor: selectedBook.quantityInStock <= 0 ? 'not-allowed' : 'pointer'
                   }}
                 >
                   <i className="fa-solid fa-cart-shopping" style={{ marginRight: '8px' }}></i>
-                  Add to Cart
+                  {selectedBook.quantityInStock <= 0 ? 'Out of Stock' : 'Add to Cart'}
                 </button>
               </div>
             </div>

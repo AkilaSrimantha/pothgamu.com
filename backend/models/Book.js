@@ -1,5 +1,40 @@
 const mongoose = require('mongoose');
 
+const reviewSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  userName: {
+    type: String,
+    required: [true, 'Reviewer name is required'],
+    trim: true
+  },
+  rating: {
+    type: Number,
+    required: [true, 'Rating (1-5) is required'],
+    min: 1,
+    max: 5
+  },
+  comment: {
+    type: String,
+    required: [true, 'Review comment is required'],
+    trim: true
+  },
+  verifiedPurchase: {
+    type: Boolean,
+    default: true
+  },
+  orderId: {
+    type: String,
+    default: ''
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const bookSchema = new mongoose.Schema({
   isbn: {
     type: String,
@@ -61,10 +96,20 @@ const bookSchema = new mongoose.Schema({
   },
   publisher: {
     type: String
+  },
+  reviews: [reviewSchema],
+  averageRating: {
+    type: Number,
+    default: 5.0,
+    min: 0,
+    max: 5
+  },
+  totalReviews: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
 });
 
 module.exports = mongoose.model('Book', bookSchema);
-

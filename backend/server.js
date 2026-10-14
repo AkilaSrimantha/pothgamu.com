@@ -91,6 +91,61 @@ fallbackRouter.delete('/books/:id', (req, res) => {
   res.json({ success: true, message: 'Book deleted successfully', data: deleted });
 });
 
+// Fallback Reviews
+fallbackRouter.post('/books/:id/reviews', (req, res) => {
+  const { userName, rating, comment, verifiedPurchase, orderId } = req.body;
+  if (!rating || Number(rating) < 1 || Number(rating) > 5) {
+    return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5 stars' });
+  }
+  if (!comment || !comment.trim()) {
+    return res.status(400).json({ success: false, message: 'Review comment cannot be empty' });
+  }
+  const updatedBook = LocalDB.books.addReview(req.params.id, {
+    userName: userName ? userName.trim() : 'Anonymous Reader',
+    rating: Number(rating),
+    comment: comment.trim(),
+    verifiedPurchase: verifiedPurchase !== undefined ? verifiedPurchase : true,
+    orderId: orderId || ''
+  });
+  if (!updatedBook) return res.status(404).json({ success: false, message: 'Book not found' });
+  res.status(201).json({ success: true, message: 'Review submitted successfully!', data: updatedBook });
+});
+
+fallbackRouter.get('/books/:id/reviews', (req, res) => {
+  const book = LocalDB.books.findById(req.params.id);
+  if (!book) return res.status(404).json({ success: false, message: 'Book not found' });
+  res.json({
+    success: true,
+    totalReviews: book.reviews?.length || 0,
+    averageRating: book.averageRating || 5.0,
+    data: book.reviews || []
+  });
+});
+
+fallbackRouter.get('/books/all-reviews/summary', (req, res) => {
+  const books = LocalDB.books.find();
+  const allReviews = [];
+  books.forEach(b => {
+    (b.reviews || []).forEach(r => {
+      allReviews.push({
+        bookId: b._id,
+        bookTitle: b.title,
+        bookCover: b.coverImage,
+        category: b.category,
+        reviewId: r._id,
+        userName: r.userName,
+        rating: r.rating,
+        comment: r.comment,
+        verifiedPurchase: r.verifiedPurchase,
+        orderId: r.orderId,
+        createdAt: r.createdAt
+      });
+    });
+  });
+  allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.json({ success: true, count: allReviews.length, data: allReviews });
+});
+
 // Fallback Categories
 fallbackRouter.get('/categories', (req, res) => {
   const categories = LocalDB.categories.find();

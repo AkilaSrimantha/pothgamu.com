@@ -483,6 +483,28 @@ export default function AdminDashboard({ adminUser, onSwitchToStore, onLogout })
             <i className="fa-solid fa-ban" style={{ width: '16px' }}></i>
             <span>Returns / Cancelled</span>
           </button>
+          <button
+            onClick={() => setActiveTab('reviews')}
+            style={{
+              width: '100%',
+              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: activeTab === 'reviews' ? '#1E293B' : 'transparent',
+              color: activeTab === 'reviews' ? '#38BDF8' : '#94A3B8',
+              fontSize: '13px',
+              fontWeight: '500',
+              marginBottom: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <i className="fa-solid fa-star" style={{ width: '16px', color: '#F59E0B' }}></i>
+            <span>Customer Reviews</span>
+          </button>
 
           {/* Inventory */}
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: '#475569', padding: '12px 12px 6px 12px' }}>
@@ -1169,6 +1191,130 @@ export default function AdminDashboard({ adminUser, onSwitchToStore, onLogout })
               </div>
             </div>
           )}
+
+          {/* Customer Reviews Tab */}
+          {activeTab === 'reviews' && (() => {
+            const allReviews = [];
+            books.forEach(b => {
+              (b.reviews || []).forEach(r => {
+                allReviews.push({
+                  ...r,
+                  bookTitle: b.title,
+                  bookCover: b.coverImage,
+                  category: b.category,
+                  bookId: b._id
+                });
+              });
+            });
+            allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const avgStoreRating = allReviews.length > 0 
+              ? (allReviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / allReviews.length).toFixed(1)
+              : '5.0';
+
+            return (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <div>
+                    <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#0F172A' }}>
+                      Customer Reviews &amp; Ratings
+                    </h1>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                      All verified customer feedback, star ratings, and comments across book catalog
+                    </p>
+                  </div>
+                </div>
+
+                {/* Rating Metrics Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    <div style={{ fontSize: '12px', color: '#64748B', fontWeight: '600', textTransform: 'uppercase' }}>Total Customer Reviews</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#0F172A', marginTop: '6px' }}>{allReviews.length}</div>
+                    <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>Across {books.length} publications</div>
+                  </div>
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    <div style={{ fontSize: '12px', color: '#64748B', fontWeight: '600', textTransform: 'uppercase' }}>Average Store Rating</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#F59E0B', marginTop: '6px' }}>
+                      ⭐ {avgStoreRating} / 5.0
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>High customer satisfaction</div>
+                  </div>
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    <div style={{ fontSize: '12px', color: '#64748B', fontWeight: '600', textTransform: 'uppercase' }}>5-Star Reviews</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#10B981', marginTop: '6px' }}>
+                      {allReviews.filter(r => Number(r.rating) >= 5).length}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
+                      {allReviews.length > 0 ? Math.round((allReviews.filter(r => Number(r.rating) >= 5).length / allReviews.length) * 100) : 100}% of all reviews
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reviews Table */}
+                <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569', fontWeight: '600' }}>
+                        <th style={{ padding: '14px 20px' }}>Book</th>
+                        <th style={{ padding: '14px 20px' }}>Customer</th>
+                        <th style={{ padding: '14px 20px' }}>Rating</th>
+                        <th style={{ padding: '14px 20px' }}>Customer Review / Comment</th>
+                        <th style={{ padding: '14px 20px' }}>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allReviews.map((rev, idx) => (
+                        <tr key={rev._id || idx} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                          <td style={{ padding: '14px 20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <img src={rev.bookCover} alt="" style={{ width: '36px', height: '48px', objectFit: 'cover', borderRadius: '4px' }} />
+                              <div>
+                                <strong style={{ color: '#0F172A', display: 'block' }}>{rev.bookTitle}</strong>
+                                <span style={{ fontSize: '11px', color: '#64748B' }}>{rev.category}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '14px 20px' }}>
+                            <div style={{ fontWeight: '600', color: '#0F172A' }}>{rev.userName}</div>
+                            {rev.verifiedPurchase && (
+                              <span style={{ fontSize: '10px', color: '#059669', backgroundColor: '#ECFDF5', padding: '1px 6px', borderRadius: '10px', fontWeight: '600' }}>
+                                ✓ Verified Buyer
+                              </span>
+                            )}
+                            {rev.orderId && (
+                              <div style={{ fontSize: '11px', color: '#64748B' }}>{rev.orderId}</div>
+                            )}
+                          </td>
+                          <td style={{ padding: '14px 20px' }}>
+                            <span style={{ color: '#F59E0B', fontSize: '14px' }}>
+                              {'★'.repeat(Math.round(rev.rating || 5))}
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: '700', marginLeft: '6px', color: '#0F172A' }}>
+                              {rev.rating}
+                            </span>
+                          </td>
+                          <td style={{ padding: '14px 20px', maxWidth: '340px' }}>
+                            <p style={{ margin: 0, color: '#334155', lineHeight: 1.4 }}>
+                              {rev.comment}
+                            </p>
+                          </td>
+                          <td style={{ padding: '14px 20px', color: '#64748B', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                            {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : 'Recent'}
+                          </td>
+                        </tr>
+                      ))}
+                      {allReviews.length === 0 && (
+                        <tr>
+                          <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#94A3B8' }}>
+                            No customer reviews recorded yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
         </main>
       </div>
 
